@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: bookly_user
+      POSTGRES_PASSWORD: bookly_password
+      POSTGRES_DB: bookly_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    command: uvicorn src:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+      - celery
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  celery:
+    build: .
+    command: celery -A src.celery_tasks.c_app worker --loglevel=info
+    depends_on:
+      - redis
+      - db
+    volumes:
+      - .:/app
+
+  flower:
+    build: .
+    command: celery -A src.celery_tasks.c_app flower --port=5555
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+      - db
+      - celery
+
+volumes:
+  postgres_data:

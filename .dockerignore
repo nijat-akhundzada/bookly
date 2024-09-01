@@ -1,0 +1,8 @@
+env/
+__pycache__
+.pytest_cache
+./__pycache__
+././__pycache__
+commands.md
+Dockerfile
+docker-compose.yml
